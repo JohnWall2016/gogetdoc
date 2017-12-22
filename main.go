@@ -31,6 +31,7 @@ var (
 	linelength           = flag.Int("linelength", 80, "maximum length of a line in the output (in Unicode code points)")
 	jsonOutput           = flag.Bool("json", false, "enable extended JSON output")
 	showUnexportedFields = flag.Bool("u", false, "show unexported fields")
+	posOfDef             = flag.Bool("pod", false, "only return position of the definition")
 )
 
 const modifiedUsage = `
@@ -84,10 +85,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *jsonOutput {
-		json.NewEncoder(os.Stdout).Encode(d)
+	if *posOfDef {
+		if d.Pos != "" {
+			fmt.Println(d.Pos)			
+		} else {
+			fmt.Println(d.Import)
+		}
 	} else {
-		fmt.Println(d.String())
+		if *jsonOutput {
+			json.NewEncoder(os.Stdout).Encode(d)
+		} else {
+			fmt.Println(d.String())
+		}		
 	}
 }
 
@@ -102,9 +111,13 @@ func Run(ctx *build.Context, filename string, offset int64) (*Doc, error) {
 		return nil, fmt.Errorf("gogetdoc: couldn't get package for %s: %s", filename, err.Error())
 	}
 	var parseError error
+	var parserMode parser.Mode
+	if !*posOfDef {
+		parserMode = parser.ParseComments
+	}
 	conf := &loader.Config{
 		Build:      ctx,
-		ParserMode: parser.ParseComments,
+		ParserMode: parserMode,
 		TypeCheckFuncBodies: func(pkg string) bool {
 			match := pkg == bp.ImportPath
 			if strings.HasSuffix(filename, "_test.go") {
@@ -124,6 +137,8 @@ func Run(ctx *build.Context, filename string, offset int64) (*Doc, error) {
 		},
 	}
 
+	conf.Import("builtin")
+
 	if isTestFile := strings.HasSuffix(filename, "_test.go"); isTestFile {
 		conf.ImportWithTests(bp.ImportPath)
 	} else {
@@ -135,9 +150,10 @@ func Run(ctx *build.Context, filename string, offset int64) (*Doc, error) {
 		return nil, fmt.Errorf("gogetdoc: error loading program: %s", err.Error())
 	}
 	doc, err := DocForPos(ctx, lprog, filename, offset)
-	if err != nil && parseError != nil {
-		fmt.Fprintln(os.Stderr, parseError)
-	}
+	/*if err != nil && parseError != nil {
+		//fmt.Fprintln(os.Stderr, parseError)
+		err = fmt.Errorf("%s[%s]", err.Error(), parseError.Error())
+	}*/
 	return doc, err
 }
 

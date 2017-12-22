@@ -31,5 +31,8 @@ func (d *Doc) String() string {
 		d.Doc = "Undocumented."
 	}
 	doc.ToText(buf, d.Doc, indent, preIndent, *linelength)
+	if d.Pos != "" {
+		fmt.Fprintf(buf, "\n%s\n", d.Pos)
+	}
 	return buf.String()
 }

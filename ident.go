@@ -140,19 +140,23 @@ func IdentDoc(ctx *build.Context, id *ast.Ident, info *loader.PackageInfo, prog 
 
 	_, nodes, _ := prog.PathEnclosingInterval(obj.Pos(), obj.Pos())
 	if len(nodes) == 0 {
-		// special case - builtins
-		doc, decl := findInBuiltin(obj.Name(), obj, prog)
-		if doc != "" {
-			return &Doc{
-				Import: "builtin",
-				Pkg:    "builtin",
-				Name:   obj.Name(),
-				Doc:    doc,
-				Decl:   decl,
-				Pos:    pos,
-			}, nil
+		info := prog.Package("builtin")
+		if info != nil {
+			for k, v := range info.Defs {
+				if k.String() == obj.Name() {
+					pkgPath = v.Pkg().Path()
+					pkgName = v.Pkg().Name()
+					if p := v.Pos(); p.IsValid() {
+						pos = prog.Fset.Position(p).String()
+					}
+					_, nodes, _ = prog.PathEnclosingInterval(v.Pos(), v.Pos())
+				}
+			}
 		}
-		return nil, fmt.Errorf("No documentation found for %s", obj.Name())
+		// special case - builtins
+		if len(nodes) == 0 {
+			return nil, fmt.Errorf("No documentation found for %s", obj.Name())
+		}
 	}
 	var doc *Doc
 	for _, node := range nodes {
