@@ -31,7 +31,7 @@ var (
 	linelength           = flag.Int("linelength", 80, "maximum length of a line in the output (in Unicode code points)")
 	jsonOutput           = flag.Bool("json", false, "enable extended JSON output")
 	showUnexportedFields = flag.Bool("u", false, "show unexported fields")
-	posOfDef             = flag.Bool("pod", false, "only return position of the definition")
+	infoOfDef            = flag.Bool("iod", false, "return information of the definition")
 )
 
 const modifiedUsage = `
@@ -85,18 +85,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *posOfDef {
-		if d.Pos != "" {
-			fmt.Println(d.Pos)			
-		} else {
-			fmt.Println(d.Import)
-		}
+	if *jsonOutput {
+		json.NewEncoder(os.Stdout).Encode(d)
 	} else {
-		if *jsonOutput {
-			json.NewEncoder(os.Stdout).Encode(d)
+		if *infoOfDef {
+			fmt.Println("iod-return")
+			if d.Pos != "" {
+				fmt.Println(d.Pos)
+				fmt.Println(d.Decl)
+			} else {
+				fmt.Println(d.Import)
+				fmt.Println(d.Decl)
+			}
 		} else {
 			fmt.Println(d.String())
-		}		
+		}
 	}
 }
 
@@ -111,13 +114,9 @@ func Run(ctx *build.Context, filename string, offset int64) (*Doc, error) {
 		return nil, fmt.Errorf("gogetdoc: couldn't get package for %s: %s", filename, err.Error())
 	}
 	var parseError error
-	var parserMode parser.Mode
-	if !*posOfDef {
-		parserMode = parser.ParseComments
-	}
 	conf := &loader.Config{
 		Build:      ctx,
-		ParserMode: parserMode,
+		ParserMode: parser.ParseComments,
 		TypeCheckFuncBodies: func(pkg string) bool {
 			match := pkg == bp.ImportPath
 			if strings.HasSuffix(filename, "_test.go") {
