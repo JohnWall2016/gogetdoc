@@ -135,7 +135,12 @@ func IdentDoc(ctx *build.Context, id *ast.Ident, info *loader.PackageInfo, prog 
 
 	// handle packages imported under a different name
 	if p, ok := obj.(*types.PkgName); ok {
-		return PackageDoc(ctx, prog.Fset, "", p.Imported().Path()) // SRCDIR TODO TODO
+		doc := &Doc {
+			Name: p.Name(),
+			Decl: fmt.Sprintf("import %q", p.Imported().Path()),
+			Pos:  prog.Fset.Position(p.Pos()).String(),
+		}
+		return doc, nil
 	}
 
 	_, nodes, _ := prog.PathEnclosingInterval(obj.Pos(), obj.Pos())
