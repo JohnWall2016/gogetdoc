@@ -137,8 +137,6 @@ func Run(ctx *build.Context, filename string, offset int64) (*Doc, error) {
 		},
 	}
 
-	conf.Import("builtin")
-
 	if isTestFile := strings.HasSuffix(filename, "_test.go"); isTestFile {
 		conf.ImportWithTests(bp.ImportPath)
 	} else {
