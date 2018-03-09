@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"go/ast"
 	"go/build"
-	_ "go/doc"
 	"go/parser"
 	"go/token"
 	"os"
@@ -28,7 +27,6 @@ func builtinPackage(fs *token.FileSet) *ast.Package {
 }
 
 func readFuncType(ft *ast.FuncType) string {
-	//fmt.Printf("%#v\n", ft)
 	pars := []string{}
 	if ft.Params != nil {
 		for _, field := range ft.Params.List {
@@ -39,7 +37,6 @@ func readFuncType(ft *ast.FuncType) string {
 	ress := []string{}
 	if ft.Results != nil {
 		for _, field := range ft.Results.List {
-			//fmt.Printf("rf%#v\n", field)
 			rinfo := readField(field)
 			ress = append(ress, rinfo)
 		}
@@ -55,7 +52,6 @@ func readFuncType(ft *ast.FuncType) string {
 }
 
 func readField(field *ast.Field) string {
-	//fmt.Printf("%#v\n", field)
 	name := ""
 	for _, nm := range field.Names {
 		name = nm.Name
@@ -168,7 +164,7 @@ func getValueSpec(name string, v *ast.ValueSpec, vt token.Token, vdoc *ast.Comme
 
 			doc := &Doc{}
 			doc.Name = name
-			
+
 			decl := fmt.Sprintf("%s %s", vt, doc.Name)
 			if typ != "" {
 				decl = fmt.Sprintf("%s %s", decl, typ)
@@ -177,12 +173,12 @@ func getValueSpec(name string, v *ast.ValueSpec, vt token.Token, vdoc *ast.Comme
 				decl = fmt.Sprintf("%s = %s", decl, strings.Join(values, ", "))
 			}
 			doc.Decl = decl
-			
+
 			pos := nm.Pos()
 			if pos.IsValid() {
 				doc.Pos = fs.Position(pos).String()
 			}
-			
+
 			sdoc := ""
 			if v.Doc != nil {
 				sdoc = v.Doc.Text()
@@ -190,11 +186,11 @@ func getValueSpec(name string, v *ast.ValueSpec, vt token.Token, vdoc *ast.Comme
 				sdoc = vdoc.Text()
 			}
 			doc.Doc = sdoc
-			
+
 			return doc
 		}
 	}
-	
+
 	return nil
 }
 
@@ -202,11 +198,11 @@ func getTypeSpec(name string, t *ast.TypeSpec, tt token.Token, tdoc *ast.Comment
 	if name != t.Name.Name {
 		return nil
 	}
-	
+
 	doc := &Doc{}
 
 	doc.Name = name
-	
+
 	decl := fmt.Sprintf("%s %s", tt, doc.Name)
 	typ := ""
 	if t.Type != nil {
@@ -224,12 +220,12 @@ func getTypeSpec(name string, t *ast.TypeSpec, tt token.Token, tdoc *ast.Comment
 		}
 	}
 	doc.Decl = decl
-	
+
 	pos := t.Name.Pos()
 	if pos.IsValid() {
 		doc.Pos = fs.Position(pos).String()
 	}
-	
+
 	sdoc := ""
 	if t.Doc != nil {
 		sdoc = t.Doc.Text()
@@ -245,15 +241,15 @@ func getFuncDecl(name string, f *ast.FuncDecl, fs *token.FileSet) *Doc {
 	if f.Name.Name != name {
 		return nil
 	}
-	
+
 	doc := &Doc{}
-	
+
 	doc.Name = name
-	
+
 	if f.Doc != nil {
 		doc.Doc = f.Doc.Text()
 	}
-	
+
 	pos := f.Name.Pos()
 	if pos.IsValid() {
 		doc.Pos = fs.Position(pos).String()
