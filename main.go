@@ -63,6 +63,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 	filename, offset, err := parsePos(*pos)
+	//fmt.Printf("%s:%d\n", filename, offset)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -149,10 +150,10 @@ func Run(ctx *build.Context, filename string, offset int64) (*Doc, error) {
 		return nil, fmt.Errorf("gogetdoc: error loading program: %s", err.Error())
 	}
 	doc, err := DocForPos(ctx, lprog, filename, offset)
-	/*if err != nil && parseError != nil {
+	if err != nil && parseError != nil {
 		//fmt.Fprintln(os.Stderr, parseError)
 		err = fmt.Errorf("%s[%s]", err.Error(), parseError.Error())
-	}*/
+	}
 	return doc, err
 }
 
